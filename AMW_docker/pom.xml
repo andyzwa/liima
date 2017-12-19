@@ -1,0 +1,78 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <groupId>ch.puzzle.itc.mobiliar</groupId>
+        <artifactId>AMW_parent</artifactId>
+        <version>1.15.3-SNAPSHOT</version>
+        <relativePath>..</relativePath>
+    </parent>
+
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>AMW_docker</artifactId>
+    <name>AMW_docker</name>
+    <packaging>docker</packaging>
+
+  <dependencies>
+    <!-- Dependencies with their version which are referenced from the
+       src/main/docker-assembly.xml descriptor. These are the WAR files which gets
+       stored in the data docker container which then is linked into tomcat container for
+       deployment -->
+    <!-- Jolokia Agent -->
+    <dependency>
+      <groupId>ch.puzzle.itc.mobiliar</groupId>
+      <artifactId>AMW_ear</artifactId>
+      <version>${project.version}</version>
+      <type>ear</type>
+    </dependency>
+    </dependencies>
+
+ <build>
+    <plugins>
+      <plugin>
+        <groupId>io.fabric8</groupId>
+        <artifactId>docker-maven-plugin</artifactId>
+        <extensions>true</extensions> <!-- enables using 'docker' packaging above -->
+        <configuration>
+          <images>
+            <image>
+              <name>liimaorg/liima:${project.version}</name>
+              <alias>liima</alias>
+              <build>
+                <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
+                <assembly>
+                    <mode>dir</mode>
+                     <inline>
+                        <dependencySets>
+                            <dependencySet>
+                                <includes>
+                                    <include>ch.puzzle.itc.mobiliar:AMW_ear</include>
+                                </includes>
+                                <outputDirectory>.</outputDirectory>
+                                <outputFileNameMapping>AMW.ear</outputFileNameMapping>
+                            </dependencySet>
+                        </dependencySets>
+                        <fileSets>
+                            <fileSet>
+                                <directory>${project.basedir}/AMW_business/src/test/resources/integration-test/testdb</directory>
+                                <includes>
+                                    <include>*</include>
+                                </includes>
+                                <outputDirectory>.</outputDirectory>
+                            </fileSet>
+                        </fileSets>
+                    </inline>
+                </assembly>
+              </build>
+              <run>
+                <ports>
+                  <port>8080:8080</port>
+                  <port>9990:9990</port>
+                </ports>
+              </run>
+            </image>
+          </images>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>
+
